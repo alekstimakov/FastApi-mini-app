@@ -16,7 +16,7 @@ def add_income(operation: OperationRequest):
 
     # Валидация amount > 0 теперь в модели OperationRequest!
     # Добавляем доход к балансу кошелька через репозиторий
-    new_balance = wallets_repository.add_income(operation.wallet_name, operation.amount)
+    wallet = wallets_repository.add_income(operation.wallet_name, operation.amount)
 
     # Возвращаем информацию об операции
     return {
@@ -24,7 +24,7 @@ def add_income(operation: OperationRequest):
         "wallet": operation.wallet_name,
         "amount": operation.amount,
         "description": operation.description,
-        "new_balance": new_balance
+        "new_balance": wallet.balance
     }
 
 def add_expense(operation: OperationRequest):
@@ -39,11 +39,11 @@ def add_expense(operation: OperationRequest):
 
     # Проверяем достаточно ли средств в кошельке (это бизнес-логика, не валидация!)
     # Получаем текущий баланс кошелька из репозитория
-    balance = wallets_repository.get_wallet_balance_by_name(operation.wallet_name)
-    if balance < operation.amount:  # Если баланс меньше суммы расхода
+    wallet = wallets_repository.get_wallet_balance_by_name(operation.wallet_name)
+    if wallet.balance < operation.amount:  # Если баланс меньше суммы расхода
         raise HTTPException(
             status_code=400,
-            detail=f"Insufficient funds. Available: {balance}"
+            detail=f"Insufficient funds. Available: {wallet.balance}"
         )  # Если денег недостаточно - возвращаем ошибку 400
 
     # Вычитаем расход из баланса кошелька через репозиторий
