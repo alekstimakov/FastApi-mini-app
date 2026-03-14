@@ -68,3 +68,14 @@ class CreateWalletRequest(BaseModel):
         # Возвращаем значение если все ок
         return v
 
+# Модель для создания пользователя
+class UserRequest(BaseModel):
+    # Логин пользователя (обязательное поле, максимум 127 символов)
+    login: str = Field(..., max_length=127)
+
+# Модель для ответа с информацией о пользователе
+class UserResponse(UserRequest):
+    # Настройка для автоматического создания модели из атрибутов объекта (например, из модели SQLAlchemy)
+    model_config = {"from_attributes": True}
+    # Уникальный идентификатор пользователя
+    id: int

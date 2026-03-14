@@ -3,14 +3,16 @@ from fastapi import HTTPException
 # Импортируем класс Session для работы с базой данных
 from sqlalchemy.orm import Session
 
+from app.models import User
 # Импортируем модель данных для операций с деньгами
 from app.schemas import OperationRequest
 # Импортируем репозиторий для работы с кошельками
 from app.repository import wallets as wallets_repository
 
-def add_income(db: Session, operation: OperationRequest):
+# Добавляет доход к балансу кошелька с проверкой существования кошелька
+def add_income(db: Session, current_user: User, operation: OperationRequest):
     # Проверяем существует ли кошелек
-    if not wallets_repository.is_wallet_exist(db, operation.wallet_name):
+    if not wallets_repository.is_wallet_exist(db, current_user.id, operation.wallet_name):
         raise HTTPException(
             status_code=404,
             detail=f"Wallet '{operation.wallet_name}' not found"
@@ -18,7 +20,7 @@ def add_income(db: Session, operation: OperationRequest):
 
     # Валидация amount > 0 теперь в модели OperationRequest!
     # Добавляем доход к балансу кошелька через репозиторий
-    wallet = wallets_repository.add_income(db, operation.wallet_name, operation.amount)
+    wallet = wallets_repository.add_income(db, current_user.id, operation.wallet_name, operation.amount)
     # Сохраняем изменения в базе данных
     db.commit()
     # Возвращаем информацию об операции
@@ -31,9 +33,10 @@ def add_income(db: Session, operation: OperationRequest):
     }
 
 
-def add_expense(db: Session, operation: OperationRequest):
+# Вычитает расход из баланса кошелька с проверкой существования кошелька и достаточности средств
+def add_expense(db: Session, current_user: User, operation: OperationRequest):
     # Проверяем существует ли кошелек
-    if not wallets_repository.is_wallet_exist(db, operation.wallet_name):
+    if not wallets_repository.is_wallet_exist(db, current_user.id, operation.wallet_name):
         raise HTTPException(
             status_code=404,
             detail=f"Wallet '{operation.wallet_name}' not found"
@@ -43,7 +46,7 @@ def add_expense(db: Session, operation: OperationRequest):
 
     # Проверяем достаточно ли средств в кошельке (это бизнес-логика, не валидация!)
     # Получаем текущий баланс кошелька из репозитория
-    wallet = wallets_repository.get_wallet_balance_by_name(db, operation.wallet_name)
+    wallet = wallets_repository.get_wallet_balance_by_name(db, current_user.id, operation.wallet_name)
     if wallet.balance < operation.amount:  # Если баланс меньше суммы расхода
         raise HTTPException(
             status_code=400,
@@ -51,7 +54,7 @@ def add_expense(db: Session, operation: OperationRequest):
         )  # Если денег недостаточно - возвращаем ошибку 400
 
     # Вычитаем расход из баланса кошелька через репозиторий
-    wallet = wallets_repository.add_expense(db, operation.wallet_name, operation.amount)
+    wallet = wallets_repository.add_expense(db, current_user.id, operation.wallet_name, operation.amount)
     # Сохраняем изменения в базе данных
     db.commit()
     # Возвращаем информацию об операции
