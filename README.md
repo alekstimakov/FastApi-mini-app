@@ -1,26 +1,28 @@
 # FastApi-mini-app
 
-Мини-приложение на FastAPI для учета баланса кошельков, доходов и расходов.
+A small FastAPI service for wallet balance tracking with income and expense operations.
 
-## Возможности
+## Features
 
-- Создание кошелька с начальным балансом
-- Пополнение кошелька
-- Списание средств
-- Получение баланса конкретного кошелька
-- Получение суммарного баланса всех кошельков
+- Create wallets with an initial balance
+- Add income to a wallet
+- Add expense from a wallet
+- Get one wallet balance
+- Get total balance across all wallets
+- Data persistence in SQLite (`finance.db`)
 
-## Стек
+## Stack
 
 - Python 3.11+
 - FastAPI
+- Pydantic v2
+- SQLAlchemy 2
 - Uvicorn
-- Pydantic
+- SQLite
 
-## Быстрый старт
+## Quick Start
 
 ```bash
-cd fastapi
 python -m venv .venv
 ```
 
@@ -36,38 +38,38 @@ Linux/macOS:
 source .venv/bin/activate
 ```
 
-Установка зависимостей:
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Запуск:
+Run app:
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Сервер будет доступен на `http://127.0.0.1:8000`.
+App URL: `http://127.0.0.1:8000`
 
-## Документация API
+## API Docs
 
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - ReDoc: `http://127.0.0.1:8000/redoc`
 
-## Эндпоинты
+## Endpoints
 
-Базовый префикс: `/api/v1`
+Base prefix: `/api/v1`
 
-- `POST /wallets` - создать кошелек
-- `GET /balance?wallet_name=<name>` - баланс конкретного кошелька
-- `GET /balance` - суммарный баланс всех кошельков
-- `POST /operations/income` - добавить доход
-- `POST /operations/expense` - добавить расход
+- `POST /wallets`
+- `GET /balance?wallet_name=<name>`
+- `GET /balance`
+- `POST /operations/income`
+- `POST /operations/expense`
 
-## Примеры запросов
+## Request Examples
 
-Создать кошелек:
+Create wallet:
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/api/v1/wallets" \
@@ -75,7 +77,7 @@ curl -X POST "http://127.0.0.1:8000/api/v1/wallets" \
   -d "{\"name\":\"cash\",\"initial_balance\":1000}"
 ```
 
-Добавить доход:
+Add income:
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/api/v1/operations/income" \
@@ -83,7 +85,7 @@ curl -X POST "http://127.0.0.1:8000/api/v1/operations/income" \
   -d "{\"wallet_name\":\"cash\",\"amount\":250,\"description\":\"salary\"}"
 ```
 
-Добавить расход:
+Add expense:
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/api/v1/operations/expense" \
@@ -91,32 +93,39 @@ curl -X POST "http://127.0.0.1:8000/api/v1/operations/expense" \
   -d "{\"wallet_name\":\"cash\",\"amount\":120,\"description\":\"food\"}"
 ```
 
-Баланс кошелька:
+Wallet balance:
 
 ```bash
 curl "http://127.0.0.1:8000/api/v1/balance?wallet_name=cash"
 ```
 
-Суммарный баланс:
+Total balance:
 
 ```bash
 curl "http://127.0.0.1:8000/api/v1/balance"
 ```
 
-## Структура проекта
+## Validation and Errors
+
+- Wallet name must be non-empty
+- `initial_balance` must be `>= 0`
+- Operation `amount` must be `> 0`
+- Expense fails with `400` if funds are insufficient
+- Unknown wallet returns `404`
+
+## Project Structure
 
 ```text
 fastapi/
   app/
-    api/v1/          # HTTP-роуты
-    service/         # Бизнес-логика
-    repository/      # Доступ к данным (in-memory словарь)
-    schemas.py       # Pydantic-схемы
-  main.py            # Точка входа приложения
+    api/v1/          # Routers
+    service/         # Business logic
+    repository/      # Data access layer
+    models.py        # SQLAlchemy models
+    schemas.py       # Pydantic schemas
+    database.py      # Engine/session/base
+    dependency.py    # DB session dependency
+  finance.db         # SQLite database file
+  main.py            # FastAPI app entrypoint
   requirements.txt
 ```
-
-## Ограничения текущей версии
-
-- Данные хранятся в памяти процесса (`in-memory`)
-- После перезапуска сервера все кошельки и операции теряются
