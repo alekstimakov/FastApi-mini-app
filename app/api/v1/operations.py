@@ -1,6 +1,10 @@
 # Импортируем класс APIRouter для создания API endpoints
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+# Импортируем класс Session для работы с базой данных
+from sqlalchemy.orm import Session
 
+# Импортируем функцию для получения сессии базы данных через dependency injection
+from app.dependency import get_db
 # Импортируем модель данных для операций с деньгами
 from app.schemas import OperationRequest
 # Импортируем сервис для работы с операциями
@@ -10,12 +14,14 @@ from app.service import operations as operations_service
 router = APIRouter()
 
 @router.post("/operations/income")
-def add_income(operation: OperationRequest):
+def add_income(operation: OperationRequest, db: Session = Depends(get_db)):
     # Вызываем сервис для добавления дохода к балансу кошелька
-    return operations_service.add_income(operation)
+    # db автоматически получается через dependency injection из get_db
+    return operations_service.add_income(db, operation)
 
 
 @router.post("/operations/expense")
-def add_expense(operation: OperationRequest):
+def add_expense(operation: OperationRequest, db: Session = Depends(get_db)):
     # Вызываем сервис для добавления расхода (вычитания из баланса кошелька)
-    return operations_service.add_expense(operation)
+    # db автоматически получается через dependency injection из get_db
+    return operations_service.add_expense(db, operation)

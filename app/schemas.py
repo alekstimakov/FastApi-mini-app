@@ -1,4 +1,8 @@
+# Импортируем класс Decimal для точных вычислений с деньгами
+from decimal import Decimal
+
 # Импортируем классы из библиотеки Pydantic для создания моделей данных и валидации
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -8,13 +12,13 @@ class OperationRequest(BaseModel):
     # Название кошелька (обязательное поле, максимум 127 символов)
     wallet_name: str = Field(..., max_length=127)
     # Сумма операции (обязательное поле, должна быть положительной)
-    amount: float
+    amount: Decimal
     # Описание операции (необязательное поле, максимум 255 символов)
     description: str | None = Field(None, max_length=255)
 
     # Валидатор для проверки что сумма положительная
     @field_validator('amount')
-    def amount_must_be_positive(cls, v: float) -> float:
+    def amount_must_be_positive(cls, v: Decimal) -> Decimal:
         # Проверяем что значение больше нуля
         if v <= 0:
             # Если нет - выбрасываем ошибку валидации
@@ -40,7 +44,7 @@ class CreateWalletRequest(BaseModel):
     # Название кошелька (обязательное поле, максимум 127 символов)
     name: str = Field(..., max_length=127)
     # Начальный баланс (необязательное поле, по умолчанию 0)
-    initial_balance: float = 0
+    initial_balance: Decimal = 0
 
     # Валидатор для проверки что имя кошелька не пустое
     @field_validator('name')
@@ -56,7 +60,7 @@ class CreateWalletRequest(BaseModel):
 
     # Валидатор для проверки что начальный баланс не отрицательный
     @field_validator('initial_balance')
-    def balance_not_negative(cls, v: float) -> float:
+    def balance_not_negative(cls, v: Decimal) -> Decimal:
         # Проверяем что значение не отрицательное
         if v < 0:
             # Если отрицательное - выбрасываем ошибку валидации
